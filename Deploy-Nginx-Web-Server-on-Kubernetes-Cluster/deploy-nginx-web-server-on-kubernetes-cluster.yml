@@ -54,3 +54,9 @@ spec:
   type: NodePort
 status:
   loadBalancer: {}
+
+# to check the webpage
+
+kubectl port-forward svc/nginx-service 8085:80
+
+http://localhost:8085/
