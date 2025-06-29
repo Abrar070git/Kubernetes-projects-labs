@@ -1,0 +1,166 @@
+1- Launch Pods on a Kubernetes Cluster
+
+2- Deploy Applications Using Deployment Controllers
+
+3- Organize Workloads with Namespaces and Pods
+
+4- Configure Resource Requests and Limits for Pods
+
+5- Apply Rolling Updates to Kubernetes Deployments
+
+6- Rollback Deployments to a Previous Version
+
+7- Create and Manage ReplicaSets in Kubernetes
+
+8- Set Up and Schedule Kubernetes CronJobs
+
+9- Implement a Countdown Job Using Kubernetes Jobs
+
+10- Deploy a Pod to Check System Time
+
+11- Diagnose and Fix Pod Deployment Failures
+
+12- Modify Existing Deployments and Services
+
+13- Ensure High Availability with Replication Controllers
+
+14- Troubleshoot and Resolve Volume Mount Errors
+
+15- Create a Namespace Named mynamespace and Deploy an NGINX Pod in It
+
+16- Define the NGINX Pod in the mynamespace Using YAML
+
+17- Run a BusyBox Pod That Executes the env Command (Using kubectl Command)
+
+18- Create a BusyBox Pod Using YAML That Runs the env Command and View Output
+
+19- Generate YAML for a New Namespace Called myns Without Applying It
+
+20- Create YAML for a ResourceQuota Named myrq with Limits: 1 CPU, 1Gi Memory, 2 Pods (Dry Run)
+
+21- List All Pods Across All Namespaces
+
+22- Deploy an NGINX Pod and Expose It on Port 80
+
+23- Update the NGINX Pod Image to nginx:1.24.0 and Observe Container Restart
+
+24- Retrieve the NGINX Pod's IP and Use a Temporary BusyBox Pod to Wget Its Root Endpoint
+
+25- Fetch YAML Definition of an Existing Pod
+
+26- Inspect Pod Details Including Status and Startup Issues
+
+27- View Logs From a Running Pod
+
+28- Access Logs From a Previously Crashed Instance of a Pod
+
+29- Start an Interactive Shell Session Inside the NGINX Pod
+
+30- Deploy a BusyBox Pod That Echoes 'Hello World' and Terminates
+
+31- Run a Self-Deleting BusyBox Pod That Echoes 'Hello World' and Exits
+
+32- Deploy an NGINX Pod With Environment Variable var1=val1 and Verify It Within the Pod
+
+33- Create a Pod with two containers, both with image busybox and command "echo hello; sleep 3600". Connect to the second container and run 'ls'
+
+34- Create a pod with an nginx container exposed on port 80. Add a busybox init container which downloads a page using 'echo "Test" > /work-dir/index.html'. Make a volume of type emptyDir and mount it in both containers. For the nginx container, mount it on "/usr/share/nginx/html" and for the initcontainer, mount it on "/work-dir". When done, get the IP of the created pod and create a busybox pod and run "wget -O- IP"
+
+35- Create 3 pods with names nginx1,nginx2,nginx3. All of them should have the label app=v1
+
+36- Show all labels of the pods
+
+37- Change the labels of pod 'nginx2' to be app=v2
+
+38- Get the label 'app' for the pods (show a column with APP labels)
+
+39- Get only the 'app=v2' pods
+
+40- Get 'app=v2' and not 'tier=frontend' pods
+
+41- Add a new label tier=web to all pods having 'app=v2' or 'app=v1' labels
+
+42- Add an annotation 'owner: marketing' to all pods having 'app=v2' label
+
+43- Remove the 'app' label from the pods we created before
+
+44- Check the annotations for pod nginx1
+
+45- Remove the annotations for these three pods
+
+46- Remove these pods to have a clean state in your cluster
+
+47- Create a pod that will be deployed to a Node that has the label 'accelerator=nvidia-tesla-p100'
+
+48- Taint a node with key tier and value frontend with the effect NoSchedule. Then, create a pod that tolerates this taint.
+
+49- Create a pod that will be placed on node controlplane. Use nodeSelector and tolerations.
+
+50- Create a deployment with image nginx:1.18.0, called nginx, having 2 replicas, defining port 80 as the port that this container exposes (don't create a service for this deployment)
+
+51- View the YAML of this deployment
+
+52- View the YAML of the replica set that was created by this deployment
+
+53- Get the YAML for one of the pods
+
+54- Check how the deployment rollout is going
+
+55- Update the nginx image to nginx:1.19.8
+
+56- Check the rollout history and confirm that the replicas are OK
+
+57- Undo the latest rollout and verify that new pods have the old image (nginx:1.18.0)
+
+58- Do an on-purpose update of the deployment with a wrong image nginx:1.91
+
+59- Verify that something's wrong with the rollout
+
+60- Return the deployment to the second revision (number 2) and verify the image is nginx:1.19.8
+
+61- Check the details of the fourth revision (number 4)
+
+62- Scale the deployment to 5 replicas
+
+63- Autoscale the deployment, pods between 5 and 10, targeting CPU utilization at 80%
+
+64- Pause the rollout of the deployment
+
+65- Update the image to nginx:1.19.9 and check that there's nothing going on, since we paused the rollout
+
+66- Resume the rollout and check that the nginx:1.19.9 image has been applied
+
+67- Delete the deployment and the horizontal pod autoscaler you created
+
+68- Implement canary deployment by running two instances of nginx marked as version=v1 and version=v2 so that the load is balanced at 75%-25% ratio
+
+69- Create a job named pi with image perl:5.34 that runs the command with arguments "perl -Mbignum=bpi -wle 'print bpi(2000)'"
+
+70- Wait till it's done, get the output
+
+71- Create a job with the image busybox that executes the command 'echo hello;sleep 30;echo world'
+
+72- Follow the logs for the pod (you'll wait for 30 seconds)
+
+73- See the status of the job, describe it and see the logs
+
+74- Delete the job
+
+75- Create the same job, make it run 5 times, one after the other. Verify its status and delete it
+
+76- Create the same job, but make it run 5 parallel times
+
+77- Create a job but ensure that it will be automatically terminated by kubernetes if it takes more than 30 seconds to execute
+
+78- Create a cron job with image busybox that runs on a schedule of "*/1 * * * *" and writes 'date; echo Hello from the Kubernetes cluster' to standard output
+
+79- See its logs and delete it
+
+80- Create the same cron job again, and watch the status. Once it ran, check which job ran by the created cron job. Check the log, and delete the cron job
+
+81- Create a cron job with image busybox that runs every minute and writes 'date; echo Hello from the Kubernetes cluster' to standard output. The cron job should be terminated if it takes more than 17 seconds to start execution after its scheduled time (i.e. the job missed its scheduled time).
+
+82- Create a cron job with image busybox that runs every minute and writes 'date; echo Hello from the Kubernetes cluster' to standard output. The cron job should be terminated if it successfully starts but takes more than 12 seconds to complete execution.
+
+83- Create a job from cronjob.
+
