@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  labels:
+    app: httpd-deploy
+  name: httpd-deploy
+  namespace: xfusion
+spec:
+  replicas: 4
+  selector:
+    matchLabels:
+      app: httpd-deploy
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 2
+      maxSurge: 1
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: httpd-deploy
+    spec:
+      containers:
+      - image: httpd:2.4.27
+        name: httpd
+        ports:
+        - containerPort: 80
+        resources: {}
+status: {}
