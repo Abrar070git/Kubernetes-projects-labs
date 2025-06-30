@@ -73,3 +73,7 @@ status:
   loadBalancer: {}
 
 k --namespace xfusion logs deployments/httpd-deploy 
+
+kubectl set image deployment/httpd-deploy httpd=httpd:2.4.43 -n devops
+
+kubectl rollout undo deployment/httpd-deploy -n devops
