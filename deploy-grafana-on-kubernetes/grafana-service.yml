@@ -3,17 +3,16 @@ kind: Service
 metadata:
   creationTimestamp: null
   labels:
-    app: jenkins
-  name: jenkins-service
-  namespace: jenkins
+    app: grafana-deployment-datacenter
+  name: grafana-service
 spec:
   ports:
-  - port: 8080
+  - port: 80
     protocol: TCP
-    targetPort: 8080
-    nodePort: 30007
+    targetPort: 3000
+    nodePort: 32000
   selector:
-    app: jenkins
+    app: grafana-deployment-datacenter
   type: NodePort
 status:
   loadBalancer: {}
