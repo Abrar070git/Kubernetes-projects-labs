@@ -1,0 +1,71 @@
+QUESTION:
+
+A new java-based application is ready to be deployed on a Kubernetes cluster. The development team had a meeting with the DevOps team to share the requirements and application scope. The team is ready to setup an application stack for it under their existing cluster. Below you can find the details for this:
+
+Create a namespace named tomcat-namespace-nautilus.
+
+Create a deployment for tomcat app which should be named as tomcat-deployment-nautilus under the same namespace you created. Replica count should be 1, the container should be named as tomcat-container-nautilus, its image should be gcr.io/kodekloud/centos-ssh-enabled:tomcat and its container port should be 8080.
+
+Create a service for tomcat app which should be named as tomcat-service-nautilus under the same namespace you created. Service type should be NodePort and nodePort should be 32227.
+
+Before clicking on Check button please make sure the application is up and running.
+
+You can use any labels as per your choice.
+
+Note: The kubectl on jump_host has been configured to work with the kubernetes cluster.
+
+SOLUTION:
+
+k create ns tomcat-namespace-nautilus
+
+k create deploy tomcat-deployment-nautilus -n tomcat-namespace-nautilus --image=gcr.io/kodekloud/centos-ssh-enabled:tomcat --replicas=1 --port=8080 --dry-run=client -oyaml > tomcat-deployment-nautilus.yml
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  labels:
+    app: tomcat-deployment-nautilus
+  name: tomcat-deployment-nautilus
+  namespace: tomcat-namespace-nautilus
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: tomcat-deployment-nautilus
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: tomcat-deployment-nautilus
+    spec:
+      containers:
+      - image: gcr.io/kodekloud/centos-ssh-enabled:tomcat
+        name: centos-ssh-enabled
+        ports:
+        - containerPort: 8080
+        resources: {}
+status: {}
+
+k expose deploy -n tomcat-namespace-nautilus tomcat-deployment-nautilus --port=8080 --target-port=8080 --type=NodePort --name=tomcat-service-nautilus --dry-run=client -oyaml > tomcat-service-nautilus.yml
+
+apiVersion: v1
+kind: Service
+metadata:
+  creationTimestamp: null
+  labels:
+    app: tomcat-deployment-nautilus
+  name: tomcat-service-nautilus
+  namespace: tomcat-namespace-nautilus
+spec:
+  ports:
+  - port: 8080
+    protocol: TCP
+    targetPort: 8080
+    nodePort: 32227
+  selector:
+    app: tomcat-deployment-nautilus
+  type: NodePort
+status:
+  loadBalancer: {}
