@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  labels:
+    app: kk-deploy
+  name: kk-deploy
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: kk-deploy
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: kk-deploy
+    spec:
+      containers:
+      - image: gcr.io/kodekloud/centos-ssh-enabled:node
+        name: centos-ssh-enabled
+        ports:
+        - containerPort: 8089
+        resources: {}
+status: {}

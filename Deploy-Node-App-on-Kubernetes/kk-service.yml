@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: Service
+metadata:
+  creationTimestamp: null
+  labels:
+    app: kk-deploy
+  name: kk-service
+spec:
+  ports:
+  - port: 8089
+    protocol: TCP
+    targetPort: 8089
+    nodePort: 30012
+  selector:
+    app: kk-deploy
+  type: NodePort
+status:
+  loadBalancer: {}
