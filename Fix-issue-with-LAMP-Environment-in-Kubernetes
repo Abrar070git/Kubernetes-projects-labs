@@ -1,0 +1,72 @@
+QUESTION:
+
+One of the DevOps team member was trying to install a WordPress website on a LAMP stack which is essentially deployed on Kubernetes cluster. It was working well and we could see the installation page a few hours ago. However something is messed up with the stack now due to a website went down. Please look into the issue and fix it:
+
+
+FYI, deployment name is lamp-wp and its using a service named lamp-service. The Apache is using http default port and nodeport is 30008. From the application logs it has been identified that application is facing some issues while connecting to the database in addition to other issues. Additionally, there are some environment variables associated with the pods like MYSQL_ROOT_PASSWORD, MYSQL_DATABASE,  MYSQL_USER, MYSQL_PASSWORD, MYSQL_HOST.
+
+
+Also do not try to delete/modify any other existing components like deployment name, service name, types, labels etc.
+
+
+Note: The kubectl utility on jump_host has been configured to work with the kubernetes cluster.
+
+SOLUTION:
+
+k get deploy lamp-wp
+k get svc -o wide 
+k get po
+
+k describe deploy lamp-wp
+k edit svc lamp-service  ----> change the port from 30008 to 30009
+
+k describe cm php-config
+
+k exec -it lamp-wp-5cdd848bfb-t4222 -c httpd-php-container -- sh
+ls
+cd app/
+cat index.php
+
+<?php
+$dbname = $_ENV['MYSQL_DATABASE'];
+$dbuser = $_ENV['MYSQL_USER'];
+$dbpass = $_ENV['MYSQL_PASSWORD'];
+$dbhost = $_ENV['MYSQL_HOST'];   <--------------- here is the error fix it without editing or deleting the file copy it and create a new cm file and save it as index.php
+
+
+$connect = mysqli_connect($dbhost, $dbuser, $dbpass) or die("Unable to Connect to '$dbhost'");
+
+$test_query = "SHOW TABLES FROM $dbname";
+$result = mysqli_query($test_query);
+
+if ($result->connect_error) {
+   die("Connection failed: " . $conn->connect_error);
+}
+  echo "Connected successfully";
+
+
+k create cm index --from-file=index.php --dry-run=client -oyaml > index.php
+
+k describe cm index
+
+k edit deploy lamp-wp      <--------------- if you use tab make sure to check it if it shows indentation issue afterward with :set list Tabs will appear as ^I
+
+volumeMounts:
+- mountPath: /opt/docker/etc/php/php.ini
+  name: php-config-volume
+  subPath: php.ini
+- mountPath: /app/index.php   <----------- add this mountpath to fix it
+  name: index
+  subPath: index.php
+
+volumes:
+- configMap:
+    defaultMode: 420
+    name: php-config
+  name: php-config-volume
+- configMap:             <------------ add this to fix
+    defaultMode: 420
+    name: index
+  name: index
+
+k get po -w
