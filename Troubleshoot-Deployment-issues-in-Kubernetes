@@ -1,0 +1,113 @@
+QUESTION:
+
+Last week, the Nautilus DevOps team deployed a redis app on Kubernetes cluster, which was working fine so far. This morning one of the team members was making some changes in this existing setup, but he made some mistakes and the app went down. We need to fix this as soon as possible. Please take a look.
+
+The deployment name is redis-deployment. The pods are not in running state right now, so please look into the issue and fix the same.
+
+Note: The kubectl utility on jump_host has been configured to work with the kubernetes cluster.
+
+SOLUTION:
+
+k describe deploy redis-deployment
+Name:             redis-deployment-6fd9d5fcb-z8cdr
+Namespace:        default
+Priority:         0
+Service Account:  default
+Node:             kodekloud-control-plane/172.17.0.2
+Start Time:       Sun, 06 Jul 2025 00:40:59 +0000
+Labels:           app=redis
+                  pod-template-hash=6fd9d5fcb
+Annotations:      <none>
+Status:           Pending
+IP:               
+IPs:              <none>
+Controlled By:    ReplicaSet/redis-deployment-6fd9d5fcb
+Containers:
+  redis-container:
+    Container ID:   
+    Image:          redis:alpin
+    Image ID:       
+    Port:           6379/TCP
+    Host Port:      0/TCP
+    State:          Waiting
+      Reason:       ContainerCreating
+    Ready:          False
+    Restart Count:  0
+    Requests:
+      cpu:        300m
+    Environment:  <none>
+    Mounts:
+      /redis-master from config (rw)
+      /redis-master-data from data (rw)
+      /var/run/secrets/kubernetes.io/serviceaccount from kube-api-access-j8g2l (ro)
+Conditions:
+  Type              Status
+  Initialized       True 
+  Ready             False 
+  ContainersReady   False 
+  PodScheduled      True 
+Volumes:
+  data:
+    Type:       EmptyDir (a temporary directory that shares a pod's lifetime)
+    Medium:     
+    SizeLimit:  <unset>
+  config:
+    Type:      ConfigMap (a volume populated by a ConfigMap)
+    Name:      redis-cofig
+    Optional:  false
+  kube-api-access-j8g2l:
+    Type:                    Projected (a volume that contains injected data from multiple sources)
+    TokenExpirationSeconds:  3607
+    ConfigMapName:           kube-root-ca.crt
+    ConfigMapOptional:       <nil>
+    DownwardAPI:             true
+QoS Class:                   Burstable
+Node-Selectors:              <none>
+Tolerations:                 node.kubernetes.io/not-ready:NoExecute op=Exists for 300s
+                             node.kubernetes.io/unreachable:NoExecute op=Exists for 300s
+Events:
+  Type     Reason       Age                   From               Message
+  ----     ------       ----                  ----               -------
+  Normal   Scheduled    9m28s                 default-scheduler  Successfully assigned default/redis-deployment-6fd9d5fcb-z8cdr to kodekloud-control-plane
+  Warning  FailedMount  74s (x12 over 9m28s)  kubelet            MountVolume.SetUp failed for volume "config" : configmap "redis-cofig" not found
+  Warning  FailedMount  40s (x4 over 7m25s)   kubelet            Unable to attach or mount volumes: unmounted volumes=[config], unattached volumes=[], failed to process volumes=[]: timed out waiting for the container
+
+
+
+kubectl get configmap redis-config -oyaml
+apiVersion: v1
+data:
+  maxmemory: 2mb
+  maxmemory-policy: allkeys-lru
+kind: ConfigMap
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"v1","data":{"maxmemory":"2mb","maxmemory-policy":"allkeys-lru"},"kind":"ConfigMap","metadata":{"annotations":{},"name":"redis-config","namespace":"default"}}
+  creationTimestamp: "2025-07-06T00:40:58Z"
+  name: redis-config
+  namespace: default
+  resourceVersion: "5217"
+  uid: e6310cf7-c431-41b6-9c1f-e7a758cd5504
+
+fix the volume-mount name and image name
+
+kubectl get configmap redis-config -oyaml
+apiVersion: v1
+data:
+  maxmemory: 2mb
+  maxmemory-policy: allkeys-lru
+kind: ConfigMap
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"v1","data":{"maxmemory":"2mb","maxmemory-policy":"allkeys-lru"},"kind":"ConfigMap","metadata":{"annotations":{},"name":"redis-config","namespace":"default"}}
+  creationTimestamp: "2025-07-06T00:40:58Z"
+  name: redis-config
+  namespace: default
+  resourceVersion: "5217"
+  uid: e6310cf7-c431-41b6-9c1f-e7a758cd5504
+
+
+
+
