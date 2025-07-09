@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Service
+metadata:
+  creationTimestamp: null
+  labels:
+    app: httpd-deployment-xfusion
+  name: httpd-service-xfusion
+  namespace: httpd-namespace-xfusion
+spec:
+  ports:
+  - port: 8084
+    protocol: TCP
+    targetPort: 8084
+    nodePort: 30004
+  selector:
+    app: httpd-deployment-xfusion
+  type: NodePort
+status:
+  loadBalancer: {}
