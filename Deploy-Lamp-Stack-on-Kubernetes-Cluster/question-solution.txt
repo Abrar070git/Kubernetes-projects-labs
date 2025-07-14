@@ -1,0 +1,240 @@
+QUESTION:
+
+The Nautilus DevOps team want to deploy a PHP website on Kubernetes cluster. They are going to use Apache as a web server and Mysql for database. The team had already gathered the requirements and now they want to make this website live. Below you can find more details:
+
+
+1) Create a config map php-config for php.ini with variables_order = "EGPCS" data.
+
+
+2) Create a deployment named lamp-wp.
+
+
+3) Create two containers under it. First container must be httpd-php-container using image webdevops/php-apache:alpine-3-php7 and second container must be mysql-container from image mysql:5.6. Mount php-config configmap in httpd container at /opt/docker/etc/php/php.ini location.
+
+
+4) Create kubernetes generic secrets for mysql related values like myql root password, mysql user, mysql password, mysql host and mysql database. Set any values of your choice.
+
+
+5) Add some environment variables for both containers:
+
+
+a) MYSQL_ROOT_PASSWORD, MYSQL_DATABASE, MYSQL_USER, MYSQL_PASSWORD and MYSQL_HOST. Take their values from the secrets you created. Please make sure to use env field (do not use envFrom) to define the name-value pair of environment variables.
+
+
+6) Create a node port type service lamp-service to expose the web application, nodePort must be 30008.
+
+
+7) Create a service for mysql named mysql-service and its port must be 3306.
+
+
+8) We already have /tmp/index.php file on jump_host server.
+
+
+a) Copy this file into httpd container under Apache document root i.e /app and replace the dummy values for mysql related variables with the environment variables you have set for mysql related parameters. Please make sure you do not hard code the mysql related details in this file, you must use the environment variables to fetch those values.
+
+
+b) You must be able to access this index.php on node port 30008 at the end, please note that you should see Connected successfully message while accessing this page.
+
+
+Note:
+
+
+The kubectl utility on jump_host has been configured to work with the kubernetes cluster.
+
+
+
+
+SOLUTION:
+
+#1 Create configmap
+echo 'variables_order = "EGPCS"' > php.ini
+k create cm php-config --from-file php.ini
+
+#2/#3
+
+k create deployment lamp-wp --image webdevops/php-apache:alpine-3-php7 --dry-run=client -o yaml > lamp-wp.yaml
+
+Now we have to be careful how we mount php.ini. We are putting it into a directory that already exists and contains files and folders, so if we use a simple mount we are going to knock out all the other stuff.
+We need to use a subPath mount, AND extra syntax in the volume declaration.
+
+While we are here, also put in the mysql container.
+
+vim lamp-wp.yaml 
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: lamp-wp
+  name: lamp-wp
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: lamp-wp
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: lamp-wp
+    spec:
+      volumes:
+      - name: ini
+        configMap:
+          name: php-config
+          items:            #<- This extra syntax to make subPath work properly
+          - key: php.ini
+            path: php.ini
+      containers:
+      - image: webdevops/php-apache:alpine-3-php7
+        name: httpd-php-container
+        volumeMounts:
+        - name: ini
+          mountPath: /opt/docker/etc/php/php.ini
+          subPath: php.ini
+      - image: mysql:5.6
+        name: mysql-container
+
+
+#4
+
+CAREFUL - There is a curveball in this one! We cannot use just anything for MYSQL_HOST or the database will not be able to be connected to. Before creating the secret see task #7
+
+k create secret generic mysql-config --from-literal MYSQL_ROOT_PASSWORD=paswd --from-literal MYSQL_DATABASE=lampdb --from-literal MYSQL_USER=thor --from-literal MYSQL_PASSWORD=mjolnir123 --from-literal MYSQL_HOST=mysql-service
+
+#5
+
+Mount the secret’s environment variables. Note that I have used an alias/anchor 9 combination here both for less typing and to avoid errors in duplicating the variables to both containers. This should now be the final edit to the deployment YAML
+
+
+vim lamp-wp.yaml 
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: lamp-wp
+  name: lamp-wp
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: lamp-wp
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: lamp-wp
+    spec:
+      volumes:
+      - name: ini
+        configMap:
+          name: php-config
+          items:            #<- This extra syntax to make subPath work properly
+          - key: php.ini
+            path: php.ini
+      containers:
+      - image: webdevops/php-apache:alpine-3-php7
+        name: httpd-php-container
+        env: &environment               #<- ANCHOR
+        - name: MYSQL_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mysql-config
+              key: MYSQL_ROOT_PASSWORD
+        - name: MYSQL_DATABASE
+          valueFrom:
+            secretKeyRef:
+              name: mysql-config
+              key: MYSQL_DATABASE
+        - name: MYSQL_USER
+          valueFrom:
+            secretKeyRef:
+              name: mysql-config
+              key: MYSQL_USER
+        - name: MYSQL_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mysql-config
+              key: MYSQL_PASSWORD
+        - name: MYSQL_HOST
+          valueFrom:
+            secretKeyRef:
+              name: mysql-config
+              key: MYSQL_HOST
+        volumeMounts:
+        - name: ini
+          mountPath: /opt/docker/etc/php/php.ini
+          subPath: php.ini
+      - image: mysql:5.6
+        name: mysql-container
+        env: *environment               #<- ALIAS (all environment beneath ANCHOR will be repeated here)
+
+Spin up the deployment - it should run fine
+
+k create -f lamp-wp.yaml
+
+Create YAML file for nodePort service
+
+k expose deployment lamp-wp --port 80 --target-port 80 --type NodePort --name lamp-service --dry-run=client -o yaml > lamp-service.yaml
+
+vim lamp-service.yaml 
+
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: lamp-wp
+  name: lamp-service
+spec:
+  ports:
+  - port: 80
+    protocol: TCP 
+    targetPort: 80
+    nodePort: 30008  #<- Add this
+  selector:
+    app: lamp-wp
+  type: NodePort
+
+k create -f lamp-service.yaml
+
+k expose deployment lamp-wp --port 3306 --target-port 3306 --type ClusterIP --name mysql-service
+service/mysql-service exposed
+
+#8
+
+Sort out index.php and place in the container
+
+#8a
+
+cp /tmp/index.php .
+vim index.php 
+
+Edit it to look like this
+
+<?php
+$dbname = getenv('MYSQL_DATABASE');
+$dbuser = getenv('MYSQL_USER');
+$dbpass = getenv('MYSQL_PASSWORD');
+$dbhost = getenv('MYSQL_HOST');
+
+$connect = mysqli_connect($dbhost, $dbuser, $dbpass) or die("Unable to Connect to '$dbhost'");
+
+$test_query = "SHOW TABLES FROM $dbname";
+$result = mysqli_query($test_query);
+
+if ($result->connect_error) {
+   die("Connection failed: " . $conn->connect_error);
+}
+  echo "Connected successfully";
+?>
+
+k get po
+NAME                       READY   STATUS    RESTARTS   AGE
+lamp-wp-78cfc8c984-vsjc5   2/2     Running   0          18s
+
+Note pod name. We will need it for the next command
+
+
+k cp -c httpd-php-container index.php lamp-wp-78cfc8c984-vsjc5:/app/index.php
+
