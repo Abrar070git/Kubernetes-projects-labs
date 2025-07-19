@@ -1,0 +1,64 @@
+cat pv.yml 
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pv-nautilus
+spec:
+  capacity:
+    storage: 3Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: manual
+  hostPath:
+    path: /mnt/finance
+    type: DirectoryOrCreate
+
+cat pvc.yml 
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pvc-nautilus
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 2Gi
+  storageClassName: manual
+
+cat pod.yml 
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-nautilus
+  labels:
+    app: nginx
+spec:
+  containers:
+  - name: container-nautilus
+    image: nginx:latest
+    volumeMounts:
+    - mountPath: /usr/share/nginx/html
+      name: volume-nautilus
+  volumes:
+  - name: volume-nautilus
+    persistentVolumeClaim:
+      claimName: pvc-nautilus
+
+cat pod-svc.yml 
+apiVersion: v1
+kind: Service
+metadata:
+  name: web-nautilus
+  labels:
+    app: nginx  # Ensure this label is present
+spec:
+  selector:
+    app: nginx  # Ensure the selector matches the pod's label
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+      nodePort: 30008
+  type: NodePort

@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-nautilus
+  labels:
+    app: nginx
+spec:
+  containers:
+  - name: container-nautilus
+    image: nginx:latest
+    volumeMounts:
+    - mountPath: /usr/share/nginx/html
+      name: volume-nautilus
+  volumes:
+  - name: volume-nautilus
+    persistentVolumeClaim:
+      claimName: pvc-nautilus
