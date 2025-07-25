@@ -1,0 +1,31 @@
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"v1","kind":"Service","metadata":{"annotations":{},"name":"python-service-xfusion","namespace":"default"},"spec":{"ports":[{"nodePort":32345,"port":8080}],"selector":{"app":"python_app"},"type":"NodePort"}}
+  creationTimestamp: "2025-07-25T18:31:34Z"
+  name: python-service-xfusion
+  namespace: default
+  resourceVersion: "1640"
+  uid: 875d3c72-600b-4b46-b554-11e292f89dbe
+spec:
+  clusterIP: 10.96.73.17
+  clusterIPs:
+  - 10.96.73.17
+  externalTrafficPolicy: Cluster
+  internalTrafficPolicy: Cluster
+  ipFamilies:
+  - IPv4
+  ipFamilyPolicy: SingleStack
+  ports:
+  - nodePort: 32345
+    port: 5000  	    # <------------- change this to 5000 from 8080
+    protocol: TCP
+    targetPort: 5000        # <------------- change this to 5000 from 8080
+  selector:
+    app: python_app
+  sessionAffinity: None
+  type: NodePort
+status:
+  loadBalancer: {}
